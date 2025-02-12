@@ -19,13 +19,44 @@ class Constants
    * The title of the game, for debug printing purposes.
    * Change this if you're making an engine.
    */
-  public static final TITLE:String = "Friday Night Funkin'";
+  public static final TITLE:String = "Friday Night Funkin' PEAR";
 
   /**
    * The current version number of the game.
    * Modify this in the `project.xml` file.
    */
   public static var VERSION(get, never):String;
+
+  /**
+   * The current version string of the engine.
+   */
+  public static var ENGINE_VERSION(get, never):String;
+
+  /**
+   * The current version number of the engine.
+   */
+  public static var ENGINE_VERSION_NUM(get, never):String;
+
+  static function get_ENGINE_VERSION_NUM():String
+  {
+    return '0.1.0';
+  }
+
+  /**
+   * The engine surname.
+   */
+  public static var ENGINE_SURNAME(get, never):String;
+
+  static function get_ENGINE_SURNAME():String
+  {
+    return 'PEAR';
+  }
+
+  /**
+   * This decides if the version suffix stuff
+   * affects `VERSION` or `ENGINE_VERSION`
+   */
+  public static var IS_ENGINE:Bool = true;
 
   /**
    * The generatedBy string embedded in the chart files made by this application.
@@ -41,19 +72,41 @@ class Constants
    * A suffix to add to the game version.
    * Add a suffix to prototype builds and remove it for releases.
    */
-  public static final VERSION_SUFFIX:String = #if FEATURE_DEBUG_FUNCTIONS ' PROTOTYPE' #else '' #end;
+  public static final VERSION_SUFFIX:String = #if FEATURE_DEBUG_FUNCTIONS 'PROTOTYPE' #else '' #end;
 
-  #if FEATURE_DEBUG_FUNCTIONS
+  /**
+   * This is the debug suffix information so that there is no code duplication.
+   *
+   * The getter for this variable also returns blank if `FEATURE_DEBUG_FUNCTIONS` is not enabled.
+   */
+  public static var DEBUG_SUFFIX(get, never):String;
+
+  static function get_DEBUG_SUFFIX():String
+  {
+    return #if FEATURE_DEBUG_FUNCTIONS '(${GIT_BRANCH} : ${GIT_HASH}${GIT_HAS_LOCAL_CHANGES ? ' : MODIFIED' : ''})' #else '' #end;
+  }
+
+  /**
+   * Returns `info` if `IS_ENGINE` is the value you want.
+   * @param info What you are trying to return
+   * @param shouldEngineEqualTrue this is if `IS_ENGINE` should be `true` or `false`
+   * @return String
+   */
+  static function returnIfInEngine(info:Any, shouldEngineEqualTrue:Bool = true):Any
+  {
+    var returnIfEngine:Bool = (shouldEngineEqualTrue) ? IS_ENGINE : !IS_ENGINE;
+
+    return ((returnIfEngine) ? info : '');
+  }
+
   static function get_VERSION():String
   {
-    return 'v${Application.current.meta.get('version')} (${GIT_BRANCH} : ${GIT_HASH}${GIT_HAS_LOCAL_CHANGES ? ' : MODIFIED' : ''})' + VERSION_SUFFIX;
+    return 'v${Application.current.meta.get('version')} ${returnIfInEngine(DEBUG_SUFFIX, false)}' + returnIfInEngine(VERSION_SUFFIX, false);
   }
-  #else
-  static function get_VERSION():String
+  static function get_ENGINE_VERSION():String
   {
-    return 'v${Application.current.meta.get('version')}' + VERSION_SUFFIX;
+    return '$ENGINE_SURNAME v$ENGINE_VERSION_NUM ${returnIfInEngine(DEBUG_SUFFIX, true)}' + returnIfInEngine(VERSION_SUFFIX, true);
   }
-  #end
 
   /**
    * URL DATA
