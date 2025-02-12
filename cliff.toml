@@ -15,20 +15,27 @@ body = """
 {% else %}\
     ## Unreleased
 {% endif %}\
-{% if previous %}\
-    {% if previous.commit_id and commit_id %}
-        [{{ previous.commit_id | truncate(length=7, end="") }}]({{ previous.commit_id }})...\
-            [{{ commit_id | truncate(length=7, end="") }}]({{ commit_id }})
-    {% endif %}\
-{% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | upper_first }}
-    {% for commit in commits %}
-        - {{ commit.message | split(pat="\n") | first | upper_first | trim }} ([{{ commit.id | truncate(length=7, end="") }}]({{ commit.id }}))\
-          {% for footer in commit.footers -%}
-            , {{ footer.token }}{{ footer.separator }}{{ footer.value }}\
-          {% endfor %}\
-    {% endfor %}
+    {% for commit in commits
+    | filter(attribute="scope")
+    | sort(attribute="scope") %}
+        - *({{commit.scope}})* {{ commit.message | upper_first }}
+        {%- if commit.breaking %}
+        {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
+        {%- endif -%}
+    {%- endfor -%}
+    {% raw %}\n{% endraw %}\
+    {%- for commit in commits %}
+        {%- if commit.scope -%}
+        {% else -%}
+            - *(No Category)* {{ commit.message | upper_first }}
+            {% if commit.breaking -%}
+            {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
+            {% endif -%}
+        {% endif -%}
+    {% endfor -%}
+    {% raw %}\n{% endraw %}\
 {% endfor %}\n
 """
 # template for the changelog footer
@@ -38,11 +45,12 @@ footer = """
 # remove the leading and trailing whitespace from the templates
 trim = true
 
+
 [git]
 # parse the commits based on https://www.conventionalcommits.org
 conventional_commits = true
 # filter out the commits that are not conventional
-filter_unconventional = false
+filter_unconventional = true
 # regex for parsing and grouping commits
 commit_parsers = [
     { message = "^feat", group = "Features" },
@@ -52,11 +60,8 @@ commit_parsers = [
     { message = "^refactor", group = "Refactor" },
     { message = "^style", group = "Styling" },
     { message = "^test", group = "Testing" },
-    { message = "^chore\\(deps.*\\)", skip = true },
-    { message = "^chore\\(pr\\)", skip = true },
-    { message = "^chore\\(pull\\)", skip = true },
     { message = "^chore\\(release\\): prepare for", skip = true },
-    { message = "^chore|^ci", group = "Miscellaneous Tasks" },
+    { message = "^chore", group = "Miscellaneous Tasks" },
     { body = ".*security", group = "Security" },
 ]
 # filter out the commits that are not matched by commit parsers
