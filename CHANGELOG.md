@@ -8,13 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-02-12
 
 ### Changed
-
+- Use mix of keepachangelog and github format
+- Git cliff --tag 0.1.0
 - Make new file
 - Change repo and owner
 - Inital Commit
 
 ### Removed
-
 - Remove old changelog file
 - Remove old file
 
